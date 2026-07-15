@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><title>Ajith Airways - Passenger Dashboard Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f1f4f9; font-family: 'Segoe UI', sans-serif; }
+        .profile-nav { background-color: #1e3c72; color: white; padding: 15px 20px; }
+        .profile-card { background: #ffffff; border-radius: 16px; border: 1px solid #e0e0e0; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .avatar-wrapper { height: 110px; width: 110px; border-radius: 50%; border: 3px solid #1e3c72; position: relative; overflow: hidden; cursor: pointer; }
+        .avatar-img { height: 100%; width: 100%; object-fit: cover; }
+        .avatar-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: white; font-size: 11px; text-align: center; padding: 2px 0; opacity: 0; transition: opacity 0.2s; }
+        .avatar-wrapper:hover .avatar-overlay { opacity: 1; }
+    </style>
+</head>
+<body>
+    <nav class="profile-nav d-flex justify-content-between align-items-center mb-4">
+        <h4 class="m-0 fw-bold"><i class="fas fa-plane-departure me-2"></i>AJITH AIRWAYS PASSENGER PROFILE : </h4>
+        <a href="/passenger/dashboard" class="btn btn-sm btn-light fw-bold text-primary"><i class="fas fa-th me-1"></i> Manage Booking</a>
+    </nav>
+
+    <div class="container mb-5">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="profile-card p-4 text-center">
+                    <div class="d-flex justify-content-center mb-3">
+                        <div class="avatar-wrapper" onclick="document.getElementById('hidden_dp_file_input_trigger').click()">
+                            <img id="display_profile_avatar_node" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" class="avatar-img" alt="Passenger Display Pic">
+                            <div class="avatar-overlay">Change DP</div>
+                        </div>
+                        <input type="file" id="hidden_dp_file_input_trigger" class="d-none" accept="image/*" onchange="previewSelectedProfileAvatarPic(this)">
+                    </div>
+
+                    <h4 class="fw-bold text-dark mb-1">{{ profile.get('full_name') }}</h4>
+                    <p class="text-muted small mb-3">Active Member</p>
+
+                    <div class="text-start border-top pt-3 fs-6 row g-2">
+                        <div class="col-12"><b>Phone:</b> <span class="text-secondary">{{ profile.get('mobile_number') }}</span></div>
+                        <div class="col-12"><b>Email:</b> <span class="text-secondary small">{{ profile.get('email_id') }}</span></div>
+                        
+                        <div class="col-12"><b>Gender Identity:</b> 
+                            {% if profile.get('gender', '').lower() == 'male' %}
+                                <span class="badge bg-primary px-2 py-1"><i class="fas fa-mars me-1"></i> Male</span>
+                            {% elif profile.get('gender', '').lower() == 'female' %}
+                                <span class="badge bg-danger px-2 py-1"><i class="fas fa-venus me-1"></i> Female</span>
+                            {% else %}
+                                <span class="badge bg-secondary px-2 py-1"><i class="fas fa-venus-mars me-1"></i> {{ profile.get('gender') }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="profile-card p-4 h-100">
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="fas fa-history text-warning me-2"></i>Flights Reservation & Transaction History: </h5>
+                    
+                    {% if history_list %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped text-center align-middle small">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>PNR Code</th>
+                                    <th>Flight No</th>
+                                    <th>Invoice Remittance</th>
+                                    <th>Status Flag</th>
+                                    <th>Action Controllers Mapping</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ticket in history_list %}
+                                <tr>
+                                    <td class="fw-bold text-primary font-monospace">{{ ticket.get('pnr_no') }}</td>
+                                    <td>{{ ticket.get('flight_no') }}</td>
+                                    <td class="fw-bold text-success">₹{{ ticket.get('total_price') }}</td>
+                                    <td>
+                                        <span class="badge {% if ticket.get('ticket_status') == 'confirmed' %}bg-success{% elif ticket.get('ticket_status') == 'cancelled' %}bg-danger{% else %}bg-warning{% endif %} text-uppercase fw-bold px-3 py-1 text-white">
+                                            {{ ticket.get('ticket_status') if ticket.get('ticket_status') else 'PENDING' }}
+                                        </span>
+                                    </td>    
+                                    <td>
+                                        <div class="d-flex gap-2 justify-content-center">
+                                            <form action="/passenger/op/status-checking" method="POST" class="d-inline">
+                                                <input type="hidden" name="pnr_no" value="{{ ticket.get('pnr_no') }}">
+                                                <button type="submit" class="btn btn-xs btn-outline-info px-2 py-1 fw-bold fs-7"><i class="fas fa-eye"></i> Status Check</button>
+                                            </form>
+                                            
+                                            {% if ticket.get('ticket_status') == 'confirmed' %}
+                                                <a href="/passenger/op/cancel-ticket?pnr_no={{ ticket.get('pnr_no') }}&action_step=preview" class="btn btn-xs btn-danger text-white px-2 py-1 fw-bold fs-7 d-inline-flex align-items-center" style="text-decoration: none;">
+                                                    <i class="fas fa-window-close me-1"></i> Cancel Ticket
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-light border text-center text-muted py-4 font-monospace small">
+                        <i class="fas fa-folder-open fa-2x d-block mb-2 text-secondary"></i> No transaction reservation histories 
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function previewSelectedProfileAvatarPic(inputElementSource) {
+        if (inputElementSource.files && inputElementSource.files[0]) {
+            const fileReaderEngine = new FileReader();
+            fileReaderEngine.onload = function(e) {
+                document.getElementById('display_profile_avatar_node').setAttribute('src', e.target.result);
+            }
+            fileReaderEngine.readAsDataURL(inputElementSource.files[0]);
+        }
+    }
+    </script>
+</body>
+</html>
