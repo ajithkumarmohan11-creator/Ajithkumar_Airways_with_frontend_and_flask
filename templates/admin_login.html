@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajith Airways - Admin Gateway</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #1f4068 0%, #162447 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .login-card {
+            max-width: 450px;
+            width: 90%;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .login-header {
+            background: #1f4068;
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .login-body {
+            padding: 40px 30px;
+        }
+        .form-control:focus {
+            border-color: #1f4068;
+            box-shadow: 0 0 0 0.25rem rgba(31, 64, 104, 0.25);
+        }
+        .btn-admin-submit {
+            background: #1f4068;
+            color: #ffffff;
+            font-weight: 600;
+            padding: 12px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .btn-admin-submit:hover {
+            background: #162447;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    
+    <div class="login-header">
+        <h3 class="m-0 fw-bold text-uppercase tracking-wide"><i class="fas fa-user-shield me-2"></i>Admin Portal</h3>
+        <p class="small text-white-50 m-0 mt-1">Ajith Airways System Control Environment</p>
+    </div>
+    
+    <div class="login-body">
+        
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-danger py-2 small mb-3 text-center" role="alert">
+                <i class="fas fa-exclamation-circle me-1"></i> {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        
+        <form action="/admin/verify-credentials" method="POST">
+            
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-secondary">User Identification ID</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light text-secondary"><i class="fas fa-user"></i></span>
+                    <input type="text" name="admin_id" class="form-control" placeholder="Enter Admin User ID..." required autocomplete="off">
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="form-label small fw-bold text-secondary">System Access Password</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light text-secondary"><i class="fas fa-lock"></i></span>
+                    <input type="password" name="admin_pass" class="form-control" placeholder="Enter System Password..." required>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-admin-submit w-100 text-uppercase tracking-wider">
+                Authenticate System <i class="fas fa-sign-in-alt ms-1"></i>
+            </button>
+            
+        </form>
+        
+        <div class="text-center mt-4">
+            <a href="/" class="small text-decoration-none text-secondary"><i class="fas fa-arrow-left me-1"></i> Return to Main Selection</a>
+        </div>
+        
+    </div>
+    
+</div>
+
+</body>
+</html>
