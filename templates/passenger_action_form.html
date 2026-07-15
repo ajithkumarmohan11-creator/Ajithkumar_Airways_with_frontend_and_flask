@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><title>Ajith Airways - Control Workspace Matrix</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f1f4f9; font-family: 'Segoe UI', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+        .pass-nav { background-color: #1e3c72; color: white; padding: 15px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .action-card { background: #ffffff; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); border: 1px solid #e0e0e0; margin-top: 40px; }
+        .ticket-boarding-pass { background: linear-gradient(to right, #ffffff 72%, #fdfbf7 28%); border-radius: 20px; border: 2px dashed #b2bec3; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; display: flex; }
+        .ticket-header { background-color: #1e3c72; color: white; padding: 15px 25px; width: 100%; border-top-left-radius: 18px; border-top-right-radius: 18px; }
+        .ticket-left { width: 72%; border-right: 2px dashed #b2bec3; padding: 25px; }
+        .ticket-right { width: 28%; padding: 25px; background-color: #fffdf9; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .pnr-tag { font-size: 22px; font-weight: 800; color: #1e3c72; letter-spacing: 1px; font-family: monospace; }
+        .blur-loading-overlay { display: none; position: fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(255,255,255,0.85); z-index:9999; justify-content:center; align-items:center; flex-direction:column; }
+    </style>
+</head>
+<body>
+
+    <div id="loading_spinner_blur_node" class="blur-loading-overlay">
+        <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+        <h5 class="fw-bold text-dark font-monospace" id="spinner_message_display">Synchronizing secure session tokens registry...</h5>
+    </div>
+
+    <nav class="pass-nav d-flex justify-content-between align-items-center">
+        <h4 class="m-0 fw-bold"><i class="fas fa-plane-departure me-2"></i>AJITH AIRWAYS</h4>
+        <a href="/passenger/dashboard" class="btn btn-sm btn-outline-light"><i class="fas fa-arrow-left me-1"></i>Back To Home Page</a>
+    </nav>
+
+    <div class="container d-flex justify-content-center align-items-center flex-grow-1 mb-5">
+        <div class="action-card w-100" style="max-width: 950px;">
+            <div class="action-header bg-light p-4 rounded-top border-bottom">
+                <h4 class="m-0 fw-bold text-dark text-capitalize"><i class="{{ current_icon }} me-2 text-primary"></i>{{ dynamic_title }}</h4>
+            </div>
+            <div class="action-body p-4">
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category if category != 'error' else 'danger' }} text-center fw-bold small mb-4 py-2 shadow-sm">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                {% if active_mode == 'check-availability' %}
+                <form action="/passenger/op/check-availability" method="POST" class="mb-5">
+                    <div class="row g-4">
+                        <div class="col-md-4"><label class="form-label small fw-bold text-secondary">Origin Station</label><input type="text" name="origine" class="form-control" required placeholder="e.g., chennai" value="{{ request.form.get('origine', '') }}"></div>
+                        <div class="col-md-4"><label class="form-label small fw-bold text-secondary">Destination Station</label><input type="text" name="destination" class="form-control" required placeholder="e.g., mumbai" value="{{ request.form.get('destination', '') }}"></div>
+                        <div class="col-md-4"><label class="form-label small fw-bold text-secondary">Departure Date (DD-MM-YYYY)</label><input type="date" name="departure_date" class="form-control" required value="{{ request.form.get('departure_date', '') }}"></div>
+                        <div class="col-12 text-end"><button type="submit" class="btn btn-primary px-5 fw-bold">Search Active Flights</button></div>
+                    </div>
+                </form>
+
+                {% if searched %}
+                <div class="mt-4 border-top pt-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                        <h5 class="fw-bold text-dark m-0"><i class="fas fa-list-ol text-primary me-2"></i>Available Flight Connectivity Schedules:</h5>
+                        <span class="badge bg-success p-2 fs-6 fw-bold shadow-sm font-monospace">
+                            <i class="fas fa-plane-departure me-2"></i>Total Flights Found: {{ total_flights_found if total_flights_found else 0 }}
+                        </span>
+                    </div>
+
+                    {% if flights_list %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped align-middle small text-center shadow-sm">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Flight ID</th>
+                                    <th>Flight No</th>
+                                    <th>Departure Time</th>
+                                    <th>Economy Class<br><small class="text-warning">(Seats / Price)</small></th>
+                                    <th>Premium Economy<br><small class="text-warning">(Seats / Price)</small></th>
+                                    <th>Business Class<br><small class="text-warning">(Seats / Price)</small></th>
+                                    <th>First Class<br><small class="text-warning">(Seats / Price)</small></th>
+                                    <th>Total Available</th>
+                                    <th>Action Mappings</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for flight in flights_list %}
+                                <tr>
+                                    {% set f_id = flight.get('flight_id', flight.get('FLIGHT_ID', 'N/A')) %}
+                                    <td class="fw-bold text-primary">{{ f_id }}</td>
+                                    <td><span class="badge bg-secondary px-2 py-1 font-monospace fw-bold">{{ flight.get('flight_no', flight.get('FLIGHT_NO', 'N/A')) }}</span></td>
+                                    <td class="text-muted small">{{ flight.get('departure_time', flight.get('DEPARTURE_TIME', 'N/A')) }}</td>
+                                    
+                                    <td><b class="text-success">{{ flight.get('economy_seats', 0) }} Left</b><br><span class="text-secondary fw-semibold">₹{{ flight.get('economy_seat_price', 0) }}</span></td>
+                                    <td><b class="text-success">{{ flight.get('premium_economy_seats', 0) }} Left</b><br><span class="text-secondary fw-semibold">₹{{ flight.get('premium_economy_seat_price', 0) }}</span></td>
+                                    <td><b class="text-success">{{ flight.get('business_seats', 0) }} Left</b><br><span class="text-secondary fw-semibold">₹{{ flight.get('business_seat_price', 0) }}</span></td>
+                                    <td><b class="text-success">{{ flight.get('first_class_seats', 0) }} Left</b><br><span class="text-secondary fw-semibold">₹{{ flight.get('first_class_seat_price', 0) }}</span></td>
+                                    
+                                    <td><span class="badge bg-primary px-3 py-1 font-monospace fw-bold fs-7">{{ flight.get('total_available_seats', 0) }} Seats</span></td>
+                                    
+                                    <td>
+                                        <a href="/passenger/operations/book-ticket?prefill_flight_id={{ f_id }}&eco_p={{ flight.get('economy_seat_price', 0) }}&prem_p={{ flight.get('premium_economy_seat_price', 0) }}&bus_p={{ flight.get('business_seat_price', 0) }}&fst_p={{ flight.get('first_class_seat_price', 0) }}" class="btn btn-sm btn-warning text-dark fw-bold shadow-sm px-3">
+                                            <i class="fas fa-ticket-alt me-1"></i>Book Now
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning text-center fw-bold">No active flight connectivity timelines matched un specific inputs targets!</div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% endif %}
+
+                {% if active_mode == 'book-ticket' %}
+                <form action="/passenger/op/book-ticket" method="POST" id="client_side_reservation_wizard_form" onsubmit="triggerLinearRedirectionScreenLoaderBlurGrid('Processing dynamic security parameters inside transaction vaults...')">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-secondary">Target Flight ID Identifier</label>
+                            <input type="number" name="flight_id" class="form-control" readonly value="{{ request.args.get('prefill_flight_id', '') }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-secondary">Registered Mobile Account Number Reference</label>
+                            <input type="text" name="mobile_number" class="form-control" readonly value="{{ current_mobile }}">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-secondary">Class Selection Matrix Dropdowns (Live Fare Cost Visible)</label>
+                            <select name="class_type" id="client_class_dropdown" class="form-select fw-semibold" required onchange="executeClientSideGrandInvoiceLiveCalculationsMatrix()">
+                                <option value="economy" data-cost-index="{{ request.args.get('eco_p', '1000') }}">Economy Class Layout - ₹{{ request.args.get('eco_p', '1000') }}</option>
+                                <option value="premium_economy" data-cost-index="{{ request.args.get('prem_p', '1500') }}">Premium Economy Layout - ₹{{ request.args.get('prem_p', '1500') }}</option>
+                                <option value="business" data-cost-index="{{ request.args.get('bus_p', '3000') }}">Business Class Layout - ₹{{ request.args.get('bus_p', '3000') }}</option>
+                                <option value="first_class" data-cost-index="{{ request.args.get('fst_p', '5000') }}">First Class Layout - ₹{{ request.args.get('fst_p', '5000') }}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-secondary">Required Seats Volumes Volume</label>
+                            <input type="number" name="no_of_seats" id="client_seats_count" class="form-control" required value="1" min="1" oninput="executeClientSideGrandInvoiceLiveCalculationsMatrix()">
+                        </div>
+                        
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold text-secondary">Aadhar Identification Number (Auto pre-filled from customer registry account)</label>
+                            <input type="text" id="client_aadhar_input_node" name="aadhar_number_display" class="form-control font-monospace text-center fs-5" readonly data-raw-aadhar="{{ current_customer_id_proof }}" value="{{ current_customer_id_proof if current_customer_id_proof else '' }}">
+                        </div>
+
+                  
+                        <div class="col-md-12 mt-4">
+                            <div class="p-3 bg-light rounded border border-warning d-flex justify-content-between align-items-center">
+                                <div><small class="text-secondary fw-bold text-uppercase d-block mb-1">Estimated Unit Fare Mappings</small><strong class="fs-5 text-dark">₹<span id="wizard_label_unit_fare">0.00</span> INR</strong></div>
+                                <div class="text-end"><small class="text-secondary fw-bold text-uppercase d-block mb-1">Grand Invoice Total Cost</small><strong class="fs-4 text-success">₹<span id="wizard_label_grand_total">0.00</span> INR</strong></div>
+                            </div>
+                    
+                            <input type="hidden" name="total_price" id="wizard_hidden_grand_total_input" value="0">
+                        </div>
+
+                        <div class="col-md-12 border-top pt-3 mt-4">
+                            <h6 class="fw-bold text-dark mb-3"><i class="fas fa-credit-card text-success me-2"></i>Select Payment Instrument Gateway:</h6>
+                            <div class="d-flex gap-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="pay_upi" value="upi" checked><label class="form-check-label fw-semibold text-secondary" for="pay_upi">Unified UPI Gateway</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="pay_card" value="card"><label class="form-check-label fw-semibold text-secondary" for="pay_card">Debit / Credit Card</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 text-end border-top pt-3 mt-4"><button type="submit" class="btn btn-success px-5 fw-bold btn-lg">Proceed to Secure Bank Gateway</button></div>
+                    </div>
+                </form>
+                {% endif %}
+
+
+            
+                {% if active_mode == 'process-upi' %}
+                <div class="text-center py-2 max-width-500 mx-auto">
+                    <h5 class="fw-bold text-primary mb-3"><i class="fab fa-google-pay fa-2x align-middle me-2"></i>GPay Unified Payment Gateway (UPI) :</h5>
+                    <p class="text-muted">Grand Invoice Total Price : <b class="text-success fs-5">₹{{ pay_meta.total_price }}</b></p>
+                    
+                    <div class="alert alert-light border small text-center text-dark mb-4 p-3 rounded-3">
+                        OTP for Your Payment: <b class="text-danger fs-5 font-monospace" id="simulation_pay_otp_token">{{ backend_pay_otp }}</b>
+                        <button type="button" class="btn btn-outline-success fw-bold d-block mx-auto mt-2 px-4 py-2 shadow-sm rounded-pill" onclick="autofillSandboxBankGatewayOtpTokenSequence('simulation_pay_otp_token')">
+                            <i class="fas fa-bolt me-1"></i> Auto-Fill OTP
+                        </button>
+                    </div>
+
+                    <form action="/passenger/op/finalize-payment" method="POST" id="bank_clearing_payment_form" onsubmit="triggerLinearRedirectionScreenLoaderBlurGrid('Verifying transactional logs entries with central clearance networks vault...')">
+                        <input type="hidden" name="flight_id" value="{{ pay_meta.flight_id }}"><input type="hidden" name="class_type" value="{{ pay_meta.class_type }}"><input type="hidden" name="no_of_seats" value="{{ pay_meta.no_of_seats }}"><input type="hidden" name="mobile_number" value="{{ pay_meta.mobile_number }}"><input type="hidden" name="total_price" value="{{ pay_meta.total_price }}">
+                        
+                        <div class="mb-3 text-start">
+                            <label class="form-label small fw-bold text-secondary">Enter Your UPI ID :</label>
+                            
+                            <input type="text" id="client_upi_id_input_box" name="user_upi_vpa_address" class="form-control text-center py-2 fs-6 font-monospace bg-white" required placeholder="e.g., username@bankaxis">
+                        </div>
+                        <div class="mb-4 text-start">
+                            <label class="form-label small fw-bold text-secondary">Enter Your OTP :</label>
+                            <input type="password" id="payment_otp_input_box" name="payment_auth_otp" class="form-control text-center py-2 fs-4 text-primary font-monospace tracking-widest" required placeholder="******" maxlength="6" oninput="monitorPaymentGatewayOtpLengthInstantValidation('simulation_pay_otp_token')">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 fw-bold py-3 btn-lg shadow-sm">Confirm to Proceed Payment</button>
+                    </form>
+                </div>
+                {% endif %}
+
+                {% if active_mode == 'process-card' %}
+                <div class="max-width-600 mx-auto py-2">
+                    <h5 class="fw-bold text-dark text-center mb-3"><i class="fas fa-credit-card text-info me-2"></i>Card Settlement Clearing Terminal Vault Pipeline</h5>
+                    <p class="text-muted text-center">Invoice Cost Settlement Volume: <b class="text-success fs-5">₹{{ pay_meta.total_price }} INR</b></p>
+                    
+                    <div class="alert alert-light border small text-center text-dark mb-3 p-2">
+                        Sandbox secure payment validation network preset OTP: <b class="text-danger" id="simulation_card_otp_token">{{ backend_pay_otp }}</b>
+                        <button type="button" class="btn btn-sm btn-outline-success fw-bold d-block mx-auto mt-2 px-3 py-1" onclick="autofillSandboxBankGatewayOtpTokenSequence('simulation_card_otp_token')"><i class="fas fa-bolt me-1"></i> Auto-Fill OTP</button>
+                    </div>
+
+                    <form action="/passenger/op/finalize-payment" method="POST" id="bank_card_clearing_form" class="row g-3 text-start" onsubmit="triggerLinearRedirectionScreenLoaderBlurGrid('Processing settlements credits mappings via central banks clearance grids...')">
+                        <input type="hidden" name="flight_id" value="{{ pay_meta.flight_id }}"><input type="hidden" name="class_type" value="{{ pay_meta.class_type }}"><input type="hidden" name="no_of_seats" value="{{ pay_meta.no_of_seats }}"><input type="hidden" name="mobile_number" value="{{ pay_meta.mobile_number }}"><input type="hidden" name="total_price" value="{{ pay_meta.total_price }}">
+                        <div class="col-md-12"><label class="form-label small fw-bold text-secondary">Credit / Debit Card Number (16 Digits)</label><input type="text" id="client_card_num_box" class="form-control py-2 font-monospace" required placeholder="4321876523419012" value="4321876523419012"></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold text-secondary">Expiry Date (MM/YY)</label><input type="text" class="form-control py-2 text-center" required placeholder="12/29" value="12/29"></div>
+                        <div class="col-md-6"><label class="form-label small fw-bold text-secondary">CVV</label><input type="password" class="form-control py-2 text-center" required placeholder="***" value="999"></div>
+                        <div class="col-md-12"><label class="form-label small fw-bold text-secondary">Secure Settlement Validation Token (OTP)</label><input type="password" id="card_otp_input_box" name="payment_auth_otp" class="form-control text-center py-2 fs-4 text-primary font-monospace tracking-widest" required placeholder="******" maxlength="6" oninput="monitorPaymentGatewayOtpLengthInstantValidation('simulation_card_otp_token')"></div>
+                        <div class="col-12 mt-4"><button type="submit" class="btn btn-info text-white w-100 fw-bold py-3 btn-lg">Process Settlement Credit Transaction</button></div>
+                    </form>
+                </div>
+                {% endif %}
+
+                
+                {% if active_mode == 'booking-receipt' and ticket_data %}
+                <div class="border rounded shadow-lg overflow-hidden mb-4">
+                    <div class="ticket-header d-flex justify-content-between align-items-center">
+                        <div class="fw-bold"><i class="fas fa-plane-departure me-2"></i>AJITH AIRWAYS SYSTEM BOARDING PASS REGISTERED</div>
+                        <div class="badge bg-warning text-dark font-monospace fw-bold px-3 py-1 text-uppercase">CONFIRMED TICKET</div>
+                    </div>
+                    
+                    <div class="ticket-boarding-pass border-0 rounded-0 shadow-none">
+                        <div class="ticket-left">
+                            <div class="row g-4 text-start">
+                                <div class="col-6"><small class="text-muted text-uppercase font-monospace d-block small">Passenger Identity Mobile</small><strong class="text-dark fs-5"><i class="fas fa-user-tag me-2 text-secondary"></i>{{ ticket_data.get('customer_id') }}</strong></div>
+                                <div class="col-6"><small class="text-muted text-uppercase font-monospace d-block small">Flight Number Identifier</small><strong class="text-primary fs-5"><i class="fas fa-plane me-2 text-secondary"></i>{{ ticket_data.get('flight_no') }} (ID: #{{ ticket_data.get('flight_id') }})</strong></div>
+                                <div class="col-6"><small class="text-muted text-uppercase font-monospace d-block small">Service Class Category</small><span class="badge bg-info text-capitalize px-3 py-2 fs-6 mt-1">{{ ticket_data.get('class_type').replace('_', ' ') }}</span></div>
+                                <div class="col-6">
+                                    <small class="text-muted text-uppercase font-monospace d-block small">Passenger Valid Identity (Aadhar ID)</small>
+                                    <strong class="text-secondary font-monospace tracking-wide fs-6" id="receipt_secure_identity_masked_node">
+                                        <i class="fas fa-id-card me-2 text-warning"></i>{{ current_customer_id_proof if current_customer_id_proof else 'Verified Secured Document Mapping Context' }}
+                                    </strong>
+                                </div>
+                                <div class="col-6"><small class="text-muted text-uppercase font-monospace d-block small">Total Seats Booked Count Volume</small><strong class="text-dark fs-5"><i class="fas fa-chair me-2 text-warning"></i>{{ ticket_data.get('no_of_seats', 1) }} Seat(s) Allocated</strong></div>
+                                <div class="col-12 border-top pt-3"><small class="text-muted text-uppercase font-monospace d-block small">Fare Remittance Invoice Paid</small><strong class="text-success fs-4">₹{{ ticket_data.get('total_price') }} INR</strong></div>
+                            </div>
+                        </div>
+                        
+                        <div class="ticket-right">
+                            <small class="text-muted text-uppercase font-monospace d-block mb-2 text-center fw-bold small">Scan Passage PNR</small>
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ ticket_data.get('pnr_no') }}" class="img-fluid border p-2 bg-white shadow-sm rounded mb-2" style="min-height: 140px; min-width: 140px;" alt="PNR Verification QR Token Aligned">
+                            <div class="text-center mt-1"><small class="text-secondary d-block font-monospace fs-7">UNIQUE PNR STRING</small><span class="pnr-tag font-monospace text-uppercase">{{ ticket_data.get('pnr_no') }}</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-4"><a href="/passenger/profile/{{ ticket_data.get('customer_id') }}" class="btn btn-primary px-5 fw-bold shadow-sm py-2"><i class="fas fa-user me-2"></i>Go to My Profile Ledger Logs</a></div>
+                {% endif %}
+
+                {% if active_mode == 'status-checking' %}
+                <form action="/passenger/op/status-checking" method="POST" class="py-3 max-width-500 mx-auto text-start">
+                    <div class="mb-3"><label class="form-label small fw-bold text-secondary">Enter Booking PNR String Token</label><input type="text" name="pnr_no" class="form-control font-monospace text-uppercase" required placeholder="e.g. AJI-XXXXXX"></div>
+                    <button type="submit" class="btn btn-info text-white fw-bold w-100 py-2">Check Ticket Booking State</button>
+                </form>
+                {% endif %}
+
+                {% if active_mode == 'cancel-ticket' %}
+                <form action="/passenger/op/cancel-ticket" method="POST" class="py-3 max-width-500 mx-auto text-start" onsubmit="return confirm('System Check: Are you sure you want to trigger reservation cancellation systems logs permanently?')">
+                    <div class="mb-3"><label class="form-label small fw-bold text-secondary">Enter Booking PNR String Token</label><input type="text" name="pnr_no" class="form-control font-monospace text-uppercase" required placeholder="e.g. AJI-XXXXXX"></div>
+                    <button type="submit" class="btn btn-danger fw-bold w-100 py-2">Execute Reservation Cancellation</button>
+                </form>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function executeClientSideGrandInvoiceLiveCalculationsMatrix() {
+        const dropDownNode = document.getElementById('client_class_dropdown');
+        if (!dropDownNode) return;
+        
+        const activatedOptionIndex = dropDownNode.options[dropDownNode.selectedIndex];
+        const unitFareCostIndex = parseFloat(activatedOptionIndex.getAttribute('data-cost-index')) || 1000;
+        
+        const countBoxMultiplierValue = parseInt(document.getElementById('client_seats_count').value) || 1;
+        const compiledGrandInvoiceCostValue = unitFareCostIndex * countBoxMultiplierValue;
+        
+        document.getElementById('wizard_label_unit_fare').innerText = unitFareCostIndex.toFixed(2);
+        document.getElementById('wizard_label_grand_total').innerText = compiledGrandInvoiceCostValue.toFixed(2);
+        document.getElementById('wizard_hidden_grand_total_input').value = compiledGrandInvoiceCostValue;
+    }
+
+
+    function formatAndMaskRawAadharStringTextNode() {
+    const aadharBoxNode = document.getElementById('client_aadhar_input_node');
+    
+    
+    if (aadharBoxNode) {
+        let rawDigitsString = aadharBoxNode.getAttribute('data-raw-aadhar') || "";
+        let cleanedOnlyDigits = rawDigitsString.replace(/\D/g, '');
+        
+        if (cleanedOnlyDigits.length >= 12) {
+            let chunkList = [];
+            for (let i = 0; i < cleanedOnlyDigits.length; i += 4) {
+                chunkList.push(cleanedOnlyDigits.substring(i, i + 4));
+            }
+            aadharBoxNode.value = chunkList.join('-');
+        } else if (aadharBoxNode.value.trim() === "") {
+            aadharBoxNode.value = "XXXX-XXXX-XXXX";
+        }
+    }
+    
+    
+    const receiptIdentityNode = document.getElementById('receipt_secure_identity_masked_node');
+    if (receiptIdentityNode) {
+        let rawReceiptDigits = receiptIdentityNode.innerText.replace(/\D/g, '');
+        if (rawReceiptDigits.length >= 12) {
+            let chunkList = [];
+            for (let i = 0; i < rawReceiptDigits.length; i += 4) {
+                chunkList.push(rawReceiptDigits.substring(i, i + 4));
+            }
+            receiptIdentityNode.innerHTML = `<i class="fas fa-id-card me-2 text-warning"></i>` + chunkList.join('-');
+        }
+    }
+}
+
+    function triggerLinearRedirectionScreenLoaderBlurGrid(messageStringToken) {
+        const overlayNode = document.getElementById('loading_spinner_blur_node');
+        const txtNode = document.getElementById('spinner_message_display');
+        if(overlayNode && txtNode) {
+            txtNode.innerText = messageStringToken;
+            overlayNode.style.display = 'flex';
+        }
+    }
+
+    
+    function autofillSandboxBankGatewayOtpTokenSequence(elementHtmlTargetIdString) {
+        const simulatorTokenPresetValue = document.getElementById(elementHtmlTargetIdString).innerText.trim();
+        const activeTargetInputField = document.getElementById('payment_otp_input_box') || document.getElementById('card_otp_input_box');
+        const processingFormTargetNode = document.getElementById('bank_clearing_payment_form') || document.getElementById('bank_card_clearing_form');
+        
+        const upiField = document.getElementById('client_upi_id_input_box');
+        const cardField = document.getElementById('client_card_num_box');
+        
+        if (upiField && upiField.value.trim() === "") {
+            alert("Security Mismatch: Please enter your valid UPI ID Address string first!");
+            upiField.focus();
+            return;
+        }
+        if (cardField && cardField.value.trim() === "") {
+            alert("Security Mismatch: Please enter your clean Card Number values field first!");
+            cardField.focus();
+            return;
+        }
+
+        if (activeTargetInputField && simulatorTokenPresetValue) {
+            activeTargetInputField.value = simulatorTokenPresetValue;
+            triggerLinearRedirectionScreenLoaderBlurGrid('Authorizing secure sandbox transaction clearance networks validation processing token strings...');
+            
+            setTimeout(function() {
+                if (processingFormTargetNode) {
+                    processingFormTargetNode.submit();
+                }
+            }, 600);
+        }
+    }
+
+    function monitorPaymentGatewayOtpLengthInstantValidation(elementHtmlTargetIdString) {
+        const activeTargetInputField = document.getElementById('payment_otp_input_box') || document.getElementById('card_otp_input_box');
+        const processingFormTargetNode = document.getElementById('bank_clearing_payment_form') || document.getElementById('bank_card_clearing_form');
+        const upiField = document.getElementById('client_upi_id_input_box');
+        const cardField = document.getElementById('client_card_num_box');
+
+        if (activeTargetInputField && activeTargetInputField.value.length === 6) {
+            if (upiField && upiField.value.trim() === "") {
+                alert("Security Mismatch: Please enter your valid UPI ID Address string first!");
+                return;
+            }
+            if (cardField && cardField.value.trim() === "") {
+                alert("Security Mismatch: Please enter your clean Card Number values field first!");
+                return;
+            }
+            
+            triggerLinearRedirectionScreenLoaderBlurGrid('Authorizing input secure verification code with banking servers...');
+            if (processingFormTargetNode) {
+                processingFormTargetNode.submit();
+            }
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+    if(document.getElementById('client_side_reservation_wizard_form')) {
+        executeClientSideGrandInvoiceLiveCalculationsMatrix();
+        formatAndMaskRawAadharStringTextNode();
+    }
+});
+
+
+
+    </script>
+</body>
+</html>
