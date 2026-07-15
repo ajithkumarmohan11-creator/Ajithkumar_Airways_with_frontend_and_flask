@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajith Airways - Welcome Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { 
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); 
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-family: 'Segoe UI', sans-serif;
+            overflow-x: hidden;
+            padding: 40px 0;
+        }
+        .welcome-card { 
+            max-width: 650px; 
+            width: 90%; 
+            background: #ffffff; 
+            border-radius: 24px; 
+            box-shadow: 0 20px 45px rgba(0,0,0,0.5); 
+            padding: 40px 30px;
+            margin-top: 30px;
+            position: relative;
+        }
+        
+        .animation-container {
+            position: relative;
+            height: 220px;
+            width: 100%;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .realistic-earth-globe {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            /* Beautiful layered Sea Blue gradients creating a brilliant realistic 3D sphere look */
+            background: radial-gradient(circle at 35% 35%, #38bdf8 0%, #1d4ed8 70%, #1e3a8a 100%);
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset -25px -25px 45px rgba(0,0,0,0.8), 
+                        inset 15px 15px 25px rgba(255,255,255,0.4),
+                        0 12px 35px rgba(0,0,0,0.4);
+            z-index: 5;
+        }
+
+        .globe-glow-filter {
+            position: absolute;
+            width: 142px;
+            height: 142px;
+            border-radius: 50%;
+            box-shadow: 0 0 35px rgba(56, 189, 248, 0.6);
+            pointer-events: none;
+            z-index: 6;
+            border: 1px solid rgba(56, 189, 248, 0.25);
+        }
+
+        .flight-crust-arc-path {
+            position: absolute;
+            width: 140px; 
+            height: 140px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .crust-flying-airplane {
+            position: absolute;
+            color: #ffffff;
+            font-size: 24px;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.6);
+            animation: continuousSurfaceHopLoopPatternEngine 15s infinite linear;
+        }
+
+        @keyframes continuousSurfaceHopLoopPatternEngine {
+            0% {
+                left: 5px; top: 105px;
+                transform: rotate(-35deg) scale(0.7);
+            }
+            5% { transform: rotate(-25deg) scale(0.85); }
+            20% {
+                top: -15px; /* Smooth curvature zenith peak over the upper edge */
+                transform: rotate(10deg) scale(1.1);
+            }
+            35% { transform: rotate(45deg) scale(0.85); }
+            40% {
+                left: 115px; top: 100px;
+                transform: rotate(55deg) scale(0.7);
+            }
+
+            42% {
+                left: 115px; top: 100px;
+                transform: rotate(145deg) scale(0.7);
+            }
+
+            45% {
+                left: 115px; top: 100px;
+                transform: rotate(145deg) scale(0.75);
+            }
+            50% { transform: rotate(155deg) scale(0.85); }
+            65% {
+                top: -15px;
+                transform: rotate(190deg) scale(1.1);
+            }
+            80% { transform: rotate(215deg) scale(0.85); }
+            95% {
+                left: 5px; top: 105px;
+                transform: rotate(225deg) scale(0.7);
+            }
+            
+            100% {
+                left: 5px; top: 105px;
+                transform: rotate(-35deg) scale(0.7);
+            }
+        }
+
+        .op-row {
+            border: 2px solid #e0e0e0;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f8f9fa;
+        }
+        .op-row:hover {
+            transform: translateY(-4px);
+            border-color: #1e3c72;
+            background: #ffffff;
+            box-shadow: 0 8px 20px rgba(30,60,114,0.15);
+        }
+        .badge-quote {
+            background-color: #e8f0fe;
+            color: #1e3c72;
+            border-radius: 12px;
+            padding: 12px;
+            font-style: italic;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div class="welcome-card text-center">
+    
+    <div class="animation-container">
+        <div class="realistic-earth-globe"></div>
+        <div class="globe-glow-filter"></div>
+        <div class="flight-crust-arc-path">
+            <div class="crust-flying-airplane"><i class="fas fa-plane"></i></div>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <h2 class="fw-bold text-dark mb-2">🙏 WELCOME 🙏</h2>
+        <h1 class="fw-extrabold text-primary tracking-tight font-monospace d-flex align-items-center justify-content-center gap-3">
+            <i class="fas fa-plane-departure text-secondary fs-3"></i> 
+            AJITH AIRWAYS 
+            <i class="fas fa-plane-arrival text-secondary fs-3"></i>
+        </h1>
+    </div>
+
+    <div class="row g-3 justify-content-center mb-5">
+        <div class="col-md-10">
+            <div class="badge-quote shadow-sm">
+                <i class="fas fa-quote-left me-2 text-warning"></i>
+                Wings for your Dreams, Wheels for your Journey!
+                <i class="fas fa-quote-right ms-2 text-warning"></i>
+            </div>
+        </div>
+    </div>
+
+    <h6 class="text-start text-secondary fw-bold text-uppercase small tracking-wider mb-3">Select Entry Gate:</h6>
+
+    <form action="/select-role" method="POST">
+        <div class="d-flex flex-column gap-3">
+            
+            <button type="submit" name="choice" value="1" class="btn text-start op-row p-3 w-100 d-flex justify-content-between align-items-center">
+                <span class="fs-5 fw-bold text-dark"><i class="fas fa-user-circle text-primary me-3 fs-4"></i>1. Passenger portal</span>
+                <span class="fs-4">🧑‍🧑‍🧒‍🧒🧳</span>
+            </button>
+
+            <button type="submit" name="choice" value="2" class="btn text-start op-row p-3 w-100 d-flex justify-content-between align-items-center">
+                <span class="fs-5 fw-bold text-dark"><i class="fas fa-user-shield text-danger me-3 fs-4"></i>2. Administrative Portal</span>
+                <span class="fs-4">👨‍✈️ 🙏 👩‍✈️</span>
+            </button>
+
+            <button type="submit" name="choice" value="3" class="btn text-start op-row p-3 w-100 d-flex justify-content-between align-items-center border-danger-subtle">
+                <span class="fs-5 fw-bold text-danger"><i class="fas fa-sign-out-alt me-3 fs-4"></i>3. Secure System Exit</span>
+                <span class="fs-4">🧑‍🧑‍🧒‍🧒👋</span>
+            </button>
+            
+        </div>
+    </form>
+</div>
+
+</body>
+</html>
