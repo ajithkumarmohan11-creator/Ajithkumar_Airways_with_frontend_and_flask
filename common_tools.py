@@ -46,7 +46,7 @@ def authorize_user():
         else:
             return False     
     
-def gender(gender):
+def validate_gender(gender):
     if gender=="1":
         gender="male"
         return gender
@@ -63,11 +63,11 @@ def authorize_gender():
     print("gender\n1.male\n2.female\n3.shemale(others)")
     user_gender=universal_input_handler(
         "your gender :".strip(),
-        gender,
+        validate_gender,
         "invalid gender option"
     )      
     if user_gender:
-        gender=gender(user_gender)
+        gender=validate_gender(user_gender)
         return gender
     else:
         return False 
