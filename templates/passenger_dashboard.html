@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajith Airways - Passenger Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f1f4f9; font-family: 'Segoe UI', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+        .pass-nav { background-color: #1e3c72; color: white; padding: 15px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .dashboard-container { max-width: 1050px; width: 95%; margin: 40px auto; }
+        .op-card { border: 2px solid #e0e0e0; border-radius: 20px; transition: all 0.3s ease; cursor: pointer; background: #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .op-card:hover { transform: translateY(-5px); border-color: #1e3c72; box-shadow: 0 10px 25px rgba(30,60,114,0.15); }
+        .profile-shortcut-icon { color: #1e3c72; transition: all 0.2s ease; cursor: pointer; }
+        .profile-shortcut-icon:hover { color: #2563eb; transform: scale(1.15); }
+    </style>
+</head>
+<body>
+
+    <nav class="pass-nav d-flex justify-content-between align-items-center">
+        <h4 class="m-0 fw-bold"><i class="fas fa-plane-departure me-2"></i>AJITH AIRWAYS  Customer  Home Page</h4>
+        <a href="/passenger-login" class="btn btn-sm btn-outline-light fw-bold"><i class="fas fa-sign-out-alt me-1"></i> Logout</a>
+    </nav>
+
+    <div class="container dashboard-container flex-grow-1">
+        
+        <div class="p-4 bg-white rounded-3 shadow-sm border mb-5 text-start">
+            <h1 class="display-4 fw-extrabold text-dark tracking-tight mb-2">Manage Bookings</h1>
+            
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <p class="text-muted fs-5 m-0">
+                    Welcome Passenger! Manage your flight bookings and explore available routes easily.
+                </p>
+                <a href="/passenger/profile/{{ current_mobile }}" class="text-decoration-none shadow-sm bg-light p-2 rounded-circle border d-inline-flex justify-content-center align-items-center" title="Go to My Account Profile">
+                    <i class="fas fa-user-circle fa-2x profile-shortcut-icon"></i>
+                </a>
+            </div>
+        </div>
+
+        <h5 class="text-secondary fw-bold text-uppercase small tracking-wider mb-4">Choose the Operation:</h5>
+
+        <div class="row g-4 text-center justify-content-center">
+            
+            <div class="col-md-6 col-lg-3">
+                <a href="/passenger/operations/check-availability" class="card h-100 op-card p-3 text-primary text-decoration-none">
+                    <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                        <i class="fas fa-search-location fa-3x mb-3 text-primary"></i>
+                        <h5 class="card-title fw-bold text-dark">1. Check Availability</h5>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <a href="/passenger/operations/book-ticket" class="card h-100 op-card p-3 text-success text-decoration-none">
+                    <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                        <i class="fas fa-ticket-alt fa-3x mb-3 text-success"></i>
+                        <h5 class="card-title fw-bold text-dark">2. Book Ticket</h5>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <a href="/passenger/operations/status-checking" class="card h-100 op-card p-3 text-info text-decoration-none">
+                    <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                        <i class="fas fa-info-circle fa-3x mb-3 text-info"></i>
+                        <h5 class="card-title fw-bold text-dark">3. Status Checking</h5>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <a href="/passenger/operations/cancel-ticket" class="card h-100 op-card p-3 text-danger text-decoration-none">
+                    <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                        <i class="fas fa-window-close fa-3x mb-3 text-danger"></i>
+                        <h5 class="card-title fw-bold text-dark">4. Cancel Ticket</h5>
+                    </div>
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
