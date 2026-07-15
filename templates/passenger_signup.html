@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><title>Passenger Registration Profile Builder</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f1f4f9; font-family: 'Segoe UI', sans-serif; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .signup-card { max-width: 700px; width: 90%; background: #ffffff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; }
+    </style>
+</head>
+<body>
+<div class="signup-card p-4">
+    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="fas fa-user-plus text-primary me-2"></i>Creat Your Profile</h5>
+    
+    {% with messages = get_flashed_messages() %}{% if messages %}{% for msg in messages %}
+      <div class="alert alert-danger text-center py-2 small mb-3">{{ msg }}</div>
+    {% endfor %}{% endif %}{% endwith %}
+
+    <form action="/passenger/execute-signup" method="POST">
+        <input type="hidden" name="mobile_number" value="{{ mobile_number }}">
+        <div class="row g-3">
+            <div class="col-md-12"><label class="form-label small fw-bold text-secondary">Full Name (as per ID proof) : </label><input type="text" name="full_name" class="form-control" required placeholder="e.g. Ajithkumar M"></div>
+            <div class="col-md-6"><label class="form-label small fw-bold text-secondary">Select Your Gender :</label>
+                <select name="gender" class="form-select" required>
+                    <option value="male">Male</option><option value="female">Female</option><option value="others">Others</option>
+                </select>
+            </div>
+            <div class="col-md-6"><label class="form-label small fw-bold text-secondary">Date of Birth (DOB): </label><input type="date" name="date_of_birth" class="form-control" required></div>
+            <div class="col-md-12"><label class="form-label small fw-bold text-secondary">Enter Your Email Address :</label><input type="email" name="email_id" class="form-control" required placeholder="name@example.com"></div>
+           <div class="col-md-6">
+                <label class="form-label small fw-bold text-secondary">ID proof for Verification(12 Digits Aadhar Number) : </label>
+                <input type="text" id="signup_aadhar_input_field_node" name="aadhar_number" class="form-control text-center font-monospace fs-5" required placeholder="XXXX-XXXX-XXXX" maxlength="14" oninput="applyDynamicSignupAadharHyphenCharacterFormattingMask(this)">
+            </div>
+            <div class="col-md-6"><label class="form-label small fw-bold text-secondary">Emergency Contact :</label><input type="text" name="emergency_contact" class="form-control" required placeholder="Enter Your Trusted One Mobile Number here (We use Incase of Emergency)"></div>
+            <div class="col-12 text-end mt-4"><button type="submit" class="btn btn-primary px-5 fw-bold">Creat My Profile</button></div>
+        </div>
+    </form>
+</div>
+
+<<script>
+function applyDynamicSignupAadharHyphenCharacterFormattingMask(elementHtmlInputNodeField) {
+    // Strip out all non-numeric characters for mask compilation formatting
+    let optimizedRawNumericDigitsText = elementHtmlInputNodeField.value.replace(/\D/g, '');
+    let compiledFormattedMaskChunksList = [];
+    
+    for (let idx = 0; idx < optimizedRawNumericDigitsText.length; idx += 4) {
+        compiledFormattedMaskChunksList.push(optimizedRawNumericDigitsText.substring(idx, idx + 4));
+    }
+    
+    // UI la structure layout formatting rules strictly visible with hyphens
+    elementHtmlInputNodeField.value = compiledFormattedMaskChunksList.join('-');
+}
+
+// 🎯 FIXED ENGINE CORE: Form submit aagura exact instant boundary seconds laye hyphens strip out variables mapping clean tracker!
+document.querySelector('form').addEventListener('submit', function(event) {
+    const aadharInputElement = document.getElementById('signup_aadhar_input_field_node');
+    if (aadharInputElement) {
+        // Hyphens matrix character set tags string variables clean bypass loops parameters completely!
+        let cleanDigitsOnlySequence = aadharInputElement.value.replace(/\D/g, '');
+        
+        // Final database push input stream updates directly value changes before validation pipeline rules
+        aadharInputElement.value = cleanDigitsOnlySequence;
+    }
+});
+</script>
+</body>
+</html>
